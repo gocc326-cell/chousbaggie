@@ -110,6 +110,47 @@ a.lk{text-decoration:underline}
 #hey.on{animation:hbg 2.3s both}@keyframes hbg{0%,55%{background:rgba(0,0,0,.6)}100%{background:rgba(0,0,0,0)}}
 #tx.sm em{font-size:12px}
 .lbt{margin-top:10px}.cap{max-width:min(640px,92vw);margin:8px auto 0;text-align:left;font-size:14px;line-height:1.8}.cap p{margin:0 0 .7em}.cap .hl{color:var(--acc)}
+/* ---- 相簿（月份分組） ---- */
+.mo h3{position:sticky;top:0;z-index:2;background:#141414;margin:0;padding:12px 0 6px;font-weight:400;font-size:15px;letter-spacing:.12em}
+.mg{display:grid;grid-template-columns:repeat(var(--n,3),1fr);gap:3px}
+.ph{position:relative;aspect-ratio:1;padding:0;border:0;background:#222;overflow:hidden;cursor:pointer;transform:none}
+.ph img{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto;object-fit:cover}
+.ph:hover{outline:2px solid var(--acc);outline-offset:-2px}
+#tip{position:fixed;z-index:120;display:none;max-width:260px;background:var(--ink);border:2px solid var(--ln);padding:4px 8px;font-size:12px;line-height:1.55;pointer-events:none;box-shadow:3px 3px 0 #000}
+#tip b{color:var(--acc);font-weight:400}
+/* ---- 筆記本（翻書） ---- */
+#bk{background:#0d0d0d;padding:calc(48px + env(safe-area-inset-top,0px)) 42px calc(58px + env(safe-area-inset-bottom,0px)) 12px;align-items:center;justify-content:center}
+.bkw{position:relative;width:100%;max-width:1000px;height:100%;max-height:700px}
+.bk3d{position:absolute;inset:0}
+.stg{position:absolute;inset:0;perspective:2600px;transition:transform 1s cubic-bezier(.45,.05,.25,1)}
+.pg,.leaf{position:absolute;top:0;bottom:0;width:50%}
+.pg.R,.leaf{right:0}.pg.L{left:0}
+.one .pg.R,.one .leaf{width:100%}.one .pg.L{display:none}
+.pg{background:#d4cebe;overflow:hidden;color:#26221f}
+.pg.nul{visibility:hidden}
+.pg.L{border-radius:6px 0 0 6px;box-shadow:inset -16px 0 18px -14px rgba(0,0,0,.35),inset 3px 0 0 #a9a290}
+.pg.R{border-radius:0 6px 6px 0;box-shadow:inset 16px 0 18px -14px rgba(0,0,0,.35),inset -3px 0 0 #a9a290}
+.leaf{display:none;transform-origin:left center;transform-style:preserve-3d}
+.leaf .f,.leaf .b{position:absolute;inset:0;overflow:hidden;background:#d4cebe;color:#26221f;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.leaf .f{border-radius:0 6px 6px 0;box-shadow:inset 16px 0 18px -14px rgba(0,0,0,.35)}
+.leaf .b{transform:rotateY(180deg);border-radius:6px 0 0 6px;box-shadow:inset -16px 0 18px -14px rgba(0,0,0,.35)}
+.pgv{position:absolute;inset:0}
+.flow{font-size:15px;line-height:1.85;color:#26221f;column-fill:auto;position:absolute}
+.flow .chap{break-before:column}
+.pn{position:absolute;bottom:12px;left:0;right:0;text-align:center;font-size:12px;color:#6a6358}
+.cover{position:absolute;inset:0;background:#2b2321;color:#d8d8d8;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-shadow:inset 0 0 0 6px #3a302d,inset 0 0 0 8px #5a4a45}
+.cover b{font-weight:400;font-size:26px;color:var(--acc);letter-spacing:.12em}
+.cover small{color:var(--mut);margin-top:12px;letter-spacing:.3em}
+.toc h2{font-weight:400;letter-spacing:.3em;font-size:20px;margin:0 0 16px;border-bottom:2px solid #26221f;padding-bottom:8px}
+.toc ol{list-style:none;margin:0;padding:0}
+.toc li{display:flex;align-items:baseline;gap:6px;padding:5px 4px;cursor:pointer}
+.toc li:hover{background:rgba(181,82,59,.16)}
+.toc .t{background:var(--c);color:#fff;padding:0 8px;font-size:14px}
+.toc .d{flex:1;border-bottom:2px dotted #8a8272;transform:translateY(-4px)}
+.toc .n{font-size:13px;color:#6a6358}
+#bnav{position:absolute;left:0;right:0;bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:12px;justify-content:center;align-items:center}
+#pi{min-width:70px;text-align:center}
+#tabs{position:absolute;left:100%;top:18px;display:flex;flex-direction:column;gap:6px;transition:opacity .4s}
 @media (prefers-reduced-motion:reduce){.show .pop,.sw{animation:none}.item,#bagr{transition:none}}
 </style>
 </head>
@@ -394,7 +435,7 @@ document.querySelectorAll('#bagg .ln').forEach(el=>{
 </script>
 <div id="alb" class="ov"><button class="x" data-c="alb">✕ 關上相簿</button><h2>相簿</h2>
 <div id="grid"></div><p id="aEmpty" class="mut"></p></div>
-<div id="bk" class="ov"><button class="x" data-c="bk">✕ 合上</button><div class="book"><div class="spiral"></div><div class="pgs"><div id="cols"></div><div id="nav"><button class="btn" id="pv">‹ 上一頁</button><span id="pi"></span><button class="btn" id="nx">下一頁 ›</button></div></div><div id="tabs"></div></div></div>
+<div id="bk" class="ov"><button class="x" data-c="bk">✕ 合上</button><div class="bkw"><div class="bk3d"><div class="stg"><div class="pg L nul" id="pL"></div><div class="pg R nul" id="pR"></div><div class="leaf" id="leaf"></div></div></div><div id="tabs"></div></div><div id="bnav"><button class="btn" id="pv">‹ 上一頁</button><span id="pi"></span><button class="btn" id="nx">下一頁 ›</button></div><div id="msr" aria-hidden="true"></div></div>
 <div id="lb" class="ov"><button class="x" data-c="lb">✕</button><div id="lbBox" style="text-align:center;width:100%"></div></div>
 <script>
 /* ====== 設定：貼上試算表「發布到網路」的 CSV 連結（三個分頁各一條） ====== */
@@ -404,17 +445,23 @@ const SHEETS={
   settings:'https://docs.google.com/spreadsheets/d/e/2PACX-1vReE7DWNkcL2vZuBobt_OmtNi06vjrLgU5sg25d8c-3ErSXy-jqW2sgxcqLd2MpKLrBTym_6R9wxgkZ/pub?gid=1414951155&single=true&output=csv'
 };
 
+(()=>{
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const okUrl=u=>/^https?:\/\//i.test(u||'');
-function zal(s){const A='\u0334\u0335\u0336\u0337\u0338\u0300\u0301\u0302\u0303\u0308',B='▚▞░▒◌';return[...s].map(c=>c+A[Math.random()*A.length|0]+(Math.random()<.25?B[Math.random()*B.length|0]:'')).join('')}
-let photos=[],shown=[],chaps=[],pg=0,pages=1;
+window.zal=function(s){const A='\u0334\u0335\u0336\u0337\u0338\u0300\u0301\u0302\u0303\u0308',B='▚▞░▒◌';return[...s].map(c=>c+A[Math.random()*A.length|0]+(Math.random()<.25?B[Math.random()*B.length|0]:'')).join('')};
+let photos=[],shown=[],chaps=[],ASC=false;
 const ST={story:'讀取中…',album:'讀取中…'};
-const cols=$('#cols'),GAP=44,cs=()=>innerWidth>760?2:1,stp=()=>cols.clientWidth+GAP;
-document.querySelectorAll('.x').forEach(b=>b.onclick=()=>$('#'+b.dataset.c).classList.remove('on'));
+const bk=$('#bk'),stg=document.querySelector('.stg'),bk3d=document.querySelector('.bk3d'),pL=$('#pL'),pR=$('#pR'),leaf=$('#leaf'),msr=$('#msr'),tip=$('#tip');
+
+document.querySelectorAll('.x').forEach(b=>b.onclick=()=>{$('#'+b.dataset.c).classList.remove('on');hideTip()});
 $('#lb').onclick=e=>{if(e.target.id==='lb')$('#lb').classList.remove('on')};
 addEventListener('keydown',e=>{const on=[...document.querySelectorAll('.ov.on')];if(!on.length)return;
   if(e.key==='Escape')on.pop().classList.remove('on');
-  if($('#bk').classList.contains('on')&&!/INPUT|TEXTAREA/.test(e.target.tagName)){if(e.key==='ArrowRight')go(pg+1);if(e.key==='ArrowLeft')go(pg-1)}});
+  if(bk.classList.contains('on')&&!$('#lb').classList.contains('on')){if(e.key==='ArrowRight')flip(cur+1);if(e.key==='ArrowLeft')flip(cur-1)}});
+
+/* ---- 浮動小框 ---- */
+function showTip(h,e){tip.innerHTML=h;tip.style.display='block';const w=tip.offsetWidth,hh=tip.offsetHeight;let x=e.clientX+12,y=e.clientY+16;if(x+w>innerWidth-6)x=e.clientX-w-12;if(y+hh>innerHeight-6)y=e.clientY-hh-12;tip.style.left=Math.max(4,x)+'px';tip.style.top=Math.max(4,y)+'px'}
+function hideTip(){tip.style.display='none'}
 
 /* ---- 讀試算表（CSV） ---- */
 function csv(t){
@@ -432,63 +479,131 @@ function rows(t){const R=csv(t);if(!R.length)return[];const H=R[0].map(h=>h.trim
 const g=(o,...ks)=>{for(const k of ks)if(o[k]!=null&&o[k]!=='')return o[k];return''};
 async function load(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(r.status);return rows(await r.text())}
 function imgUrl(u){const m=u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]+)/);return m?'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w1400':u}
-const dkey=d=>{const t=Date.parse(String(d).replace(/[.\-]/g,'/'));return isNaN(t)?0:t};
+const ymd=d=>{const m=String(d).match(/(\d{4})\D+(\d{1,2})(?:\D+(\d{1,2}))?/);return m?{y:+m[1],m:+m[2],n:+m[1]*10000+ +m[2]*100+(+m[3]||0)}:null};
 
-/* ---- 相簿 ---- */
-function openAlbum(){$('#alb').classList.add('on');drawAlbum()}
+/* ---- 相簿：依月份分組 ---- */
+window.openAlbum=function(){$('#alb').classList.add('on');drawAlbum()};
 function drawAlbum(){
-  shown=[...photos].sort((a,b)=>dkey(b.date)-dkey(a.date));
+  shown=photos.map(p=>Object.assign({n:(ymd(p.date)||{n:0}).n},p)).sort((a,b)=>ASC?a.n-b.n:b.n-a.n);
   $('#aEmpty').textContent=shown.length?'':(ST.album||'還沒有照片。');
-  $('#grid').innerHTML=shown.map((p,i)=>'<div class="ph" data-i="'+i+'" style="--r:'+((i%3-1)*.8)+'deg"><img loading="lazy" referrerpolicy="no-referrer" alt="" src="'+esc(p.img)+'"><p>'+esc(p.title||'（無標題）')+'<br><small>'+esc(p.date||'')+'</small></p></div>').join('');
+  const gs=[],idx={};
+  shown.forEach((p,i)=>{const d=ymd(p.date),key=d?d.y*100+d.m:0;let G=idx[key];if(!G){G=idx[key]={key,label:d?d.y+' 年 '+d.m+' 月':'未標日期',items:[]};gs.push(G)}G.items.push(i)});
+  gs.sort((a,b)=>(a.key===0)-(b.key===0)||(ASC?a.key-b.key:b.key-a.key));
+  $('#grid').innerHTML=gs.map(G=>'<section class="mo"><h3>'+G.label+'</h3><div class="mg">'+G.items.map(i=>'<div class="ph" data-i="'+i+'"><img loading="lazy" referrerpolicy="no-referrer" alt="" src="'+esc(shown[i].img)+'"></div>').join('')+'</div></section>').join('');
+  fitGrid();
 }
+function fitGrid(){const w=$('#grid').clientWidth||innerWidth;$('#grid').style.setProperty('--n',Math.max(3,Math.min(6,Math.floor(w/120))))}
+addEventListener('resize',()=>{fitGrid();if(bk.classList.contains('on'))layout()});
 $('#grid').onclick=e=>{const c=e.target.closest('.ph');if(c)openLb(+c.dataset.i)};
+$('#grid').addEventListener('mousemove',e=>{const c=e.target.closest('.ph');if(!c){hideTip();return}const p=shown[+c.dataset.i];showTip('<b>'+esc(p.title||'（無標題）')+'</b>'+(p.date?'<br><span class="mut">'+esc(p.date)+'</span>':''),e)});
+$('#grid').addEventListener('mouseleave',hideTip);
 function openLb(i){
-  const p=shown[i];if(!p)return;
+  const p=shown[i];if(!p)return;hideTip();
   $('#lbBox').innerHTML='<img referrerpolicy="no-referrer" alt="" src="'+esc(p.img)+'"><div class="lbt"><b>'+esc(p.title||'（無標題）')+'</b> <span class="mut">'+esc(p.date||'')+'</span></div>'+(p.desc?'<div class="cap">'+md(p.desc)+'</div>':'')+(okUrl(p.url)?'<div class="fm" style="justify-content:center"><a class="btn pri" href="'+esc(p.url)+'" target="_blank" rel="noopener">前往原文 ▸</a></div>':'');
   $('#lb').classList.add('on');
 }
 
-/* ---- 筆記本（翻頁） ---- */
+/* ---- 內文標記 ---- */
 const COL=['#b5523b','#c9a94e','#6f8a6a','#6c86a0','#8a7f86','#9a6a4f'];
 const colOf=(c,i)=>/^#[0-9a-f]{3,8}$/i.test(c.c||'')?c.c:COL[i%COL.length];
 function md(t){
   const inl=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<span class="hl">$1</span>').replace(/\*(.+?)\*/g,'<em>$1</em>');
-  return String(t||'').split(/\n{2,}/).map(b=>{b=b.trim();if(!b)return'';
-    if(/^#{1,3} /.test(b))return'<h3>'+inl(b.replace(/^#+ /,''))+'</h3>';
-    if(/^(-{3,}|\*{3,})$/.test(b))return'<hr>';
-    if(/^> /.test(b))return'<blockquote>'+inl(b.replace(/^> ?/gm,'')).replace(/\n/g,'<br>')+'</blockquote>';
-    return'<p>'+inl(b).replace(/\n/g,'<br>')+'</p>'}).join('');
+  const out=[];let para=[],quote=[];
+  const fp=()=>{if(para.length){out.push('<p>'+para.map(inl).join('<br>')+'</p>');para=[]}};
+  const fq=()=>{if(quote.length){out.push('<blockquote>'+quote.map(inl).join('<br>')+'</blockquote>');quote=[]}};
+  String(t||'').replace(/\r/g,'').split('\n').forEach(raw=>{
+    const l=raw.trim();let m;
+    if(!l){fp();fq();return}
+    if((m=l.match(/^[#＃]{1,3}\s*(.+?)\s*[#＃]*$/))){fp();fq();out.push('<h3>'+inl(m[1])+'</h3>');return}
+    if(/^(-{3,}|\*{3,}|_{3,})$/.test(l)){fp();fq();out.push('<hr>');return}
+    if(/^[>＞]\s?/.test(l)){fp();quote.push(l.replace(/^[>＞]\s?/,''));return}
+    fq();para.push(l)});
+  fp();fq();return out.join('');
 }
-function openBook(){$('#bk').classList.add('on');layout()}
-function drawBook(){
-  cols.innerHTML=chaps.length?chaps.map((c,i)=>'<section class="chap" style="--c:'+colOf(c,i)+'"><h2>'+esc(c.title||'無題')+'</h2>'+md(c.body)+'</section>').join(''):'<section class="chap" style="--c:#6c6c6c"><h2>空白的筆記本</h2><p>'+esc(ST.story||'還沒有故事。')+'</p></section>';
-  $('#tabs').innerHTML=chaps.map((c,i)=>'<button class="tab" data-i="'+i+'" style="--c:'+colOf(c,i)+'">'+esc(c.title||'無題')+'</button>').join('');
-  layout();
+
+/* ---- 筆記本：翻書 ---- */
+let cur=0,busy=false,single=false,list=[],starts=[],G={maxS:0,step:1,base:2,html:''};
+const PADX=28,PADT=26,PADB=42;
+const strip=s=>String(s||'').replace(/[*#＃>＞_`]/g,'').replace(/\s+/g,' ').trim();
+const sumOf=c=>c.sum||(strip(c.body).slice(0,70)+(strip(c.body).length>70?'…':''));
+function flowHTML(nums){
+  const toc='<section class="toc"><h2>目次</h2><ol>'+(chaps.length?chaps.map((c,i)=>'<li data-i="'+i+'"><span class="t" style="--c:'+colOf(c,i)+'">'+esc(c.title||'無題')+'</span><span class="d"></span><span class="n">'+(nums?nums[i]:'p.00')+'</span></li>').join(''):'<li class="mut">'+esc(ST.story||'還沒有故事。')+'</li>')+'</ol></section>';
+  return toc+chaps.map((c,i)=>'<section class="chap" style="--c:'+colOf(c,i)+'"><h2>'+esc(c.title||'無題')+'</h2>'+md(c.body)+'</section>').join('');
 }
+function flowStyle(){return 'width:'+G.tw+'px;height:'+G.th+'px;column-width:'+G.tw+'px;column-gap:'+(2*PADX)+'px'}
 function layout(){
-  if(!$('#bk').classList.contains('on'))return;
-  cols.style.setProperty('--cols',cs());
-  pages=Math.max(1,Math.round((cols.scrollWidth+GAP)/stp()));
-  pg=Math.min(pg,pages-1);cols.scrollLeft=pg*stp();paint();
+  const W=bk3d.clientWidth,H=bk3d.clientHeight;if(!W||!H)return;
+  single=innerWidth<=760;bk3d.classList.toggle('one',single);
+  G.pw=single?W:W/2;G.tw=Math.max(80,G.pw-2*PADX);G.th=Math.max(80,H-PADT-PADB);G.step=G.tw+2*PADX;G.base=single?1:2;
+  msr.className='flow';msr.style.cssText='position:absolute;left:0;top:0;visibility:hidden;pointer-events:none;overflow:hidden;'+flowStyle();
+  msr.innerHTML=flowHTML(null);
+  const n=Math.max(1,Math.round((msr.scrollWidth+2*PADX)/G.step));
+  starts=chaps.map((c,i)=>{const h=msr.children[i+1]&&msr.children[i+1].firstElementChild;return h?Math.floor(h.offsetLeft/G.step+.02):0});
+  G.html=flowHTML(starts.map(k=>'p.'+(k-starts[0]+1)));
+  list=single?['cover']:['cover','blank'];
+  for(let k=0;k<n;k++)list.push(k);
+  if(!single&&list.length%2)list.push('blank');
+  G.maxS=single?list.length-1:list.length/2;
+  cur=Math.min(cur,G.maxS);render();
 }
-function starts(){return chaps.map((c,i)=>{const h=cols.children[i]&&cols.children[i].firstElementChild;return h?Math.floor(h.offsetLeft/stp()+.02):0})}
+function view(i){
+  const e=list[i];if(e===undefined)return null;
+  if(e==='cover')return'<div class="cover"><b>荒寶の包包</b><small>NOTE</small></div>';
+  if(e==='blank')return'<div class="pgv"></div>';
+  const num=(starts.length&&e>=starts[0])?'<div class="pn">'+(e-starts[0]+1)+'</div>':'';
+  return'<div class="pgv"><div class="flow" style="left:'+PADX+'px;top:'+PADT+'px;'+flowStyle()+';transform:translateX('+(-e*G.step)+'px)">'+G.html+'</div>'+num+'</div>';
+}
+const LP=s=>single?-1:2*s-1,RP=s=>single?s:2*s;
+function setPg(el,i){const v=i<0?null:view(i);el.classList.toggle('nul',v===null);el.innerHTML=v||''}
+function render(){
+  setPg(pL,LP(cur));setPg(pR,RP(cur));
+  stg.style.transform=(!single&&cur===0)?'translateX(-25%)':'none';
+  $('#tabs').style.opacity=cur===0?0:1;paint();
+}
 function paint(){
-  $('#pi').textContent=(pg+1)+' / '+pages;$('#pv').disabled=pg<=0;$('#nx').disabled=pg>=pages-1;
-  let a=0;starts().forEach((v,i)=>{if(v<=pg)a=i});
+  $('#pi').textContent=cur===0?'表紙':cur+' / '+(G.maxS);
+  $('#pv').disabled=cur<=0;$('#nx').disabled=cur>=G.maxS;
+  const vis=Math.max(RP(cur),LP(cur));let a=-1;starts.forEach((k,i)=>{if(G.base+k<=vis)a=i});
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',i===a));
 }
-function go(p){
-  p=Math.max(0,Math.min(pages-1,p));if(p===pg)return;
-  const f=p>pg?'tn':'tp';pg=p;cols.classList.remove('tn','tp');void cols.offsetWidth;cols.classList.add(f);
-  setTimeout(()=>{cols.scrollLeft=pg*stp();paint()},170);setTimeout(()=>cols.classList.remove(f),440);
+function flip(s2){
+  if(busy||s2===cur||s2<0||s2>G.maxS)return;busy=true;hideTip();
+  const nx=s2>cur;
+  const front=nx?RP(cur):RP(s2),back=single?-1:(nx?LP(s2):LP(cur)),uL=nx?LP(cur):LP(s2),uR=nx?RP(s2):RP(cur);
+  setPg(pL,uL);setPg(pR,uR);
+  leaf.innerHTML='<div class="f">'+(front<0?'':view(front)||'')+'</div><div class="b">'+(back<0?'':view(back)||'')+'</div>';
+  leaf.style.transition='none';leaf.style.display='block';leaf.style.transform=nx?'rotateY(0deg)':'rotateY(-180deg)';
+  void leaf.offsetWidth;
+  stg.style.transform=(!single&&s2===0)?'translateX(-25%)':'none';
+  $('#tabs').style.opacity=s2===0?0:1;
+  leaf.style.transition='transform 1s cubic-bezier(.45,.05,.25,1)';
+  leaf.style.transform=nx?'rotateY(-180deg)':'rotateY(0deg)';
+  setTimeout(()=>{cur=s2;leaf.style.display='none';render();busy=false},1040);
 }
-$('#pv').onclick=()=>go(pg-1);$('#nx').onclick=()=>go(pg+1);
-$('#tabs').onclick=e=>{const b=e.target.closest('.tab');if(b)go(starts()[+b.dataset.i])};
-let sx=null;cols.addEventListener('pointerdown',e=>{sx=e.clientX});
-cols.addEventListener('pointerup',e=>{if(sx===null)return;const d=e.clientX-sx;sx=null;if(Math.abs(d)>50)go(pg+(d<0?1:-1))});
-addEventListener('resize',layout);if(document.fonts)document.fonts.ready.then(layout);
+function jump(i){const k=starts[i];if(k==null)return;const idx=G.base+k;flip(single?idx:Math.ceil(idx/2))}
+window.openBook=function(){
+  bk.classList.add('on');cur=0;
+  requestAnimationFrame(()=>{layout();setTimeout(()=>{if(bk.classList.contains('on')&&cur===0)flip(1)},550)});
+};
+function drawBook(){
+  $('#tabs').innerHTML=chaps.map((c,i)=>'<button class="tab" data-i="'+i+'" style="--c:'+colOf(c,i)+'">'+esc(c.title||'無題')+'</button>').join('');
+  if(bk.classList.contains('on'))layout();
+}
+$('#pv').onclick=()=>flip(cur-1);$('#nx').onclick=()=>flip(cur+1);
+let swiped=0,sx=null;
+bk.addEventListener('click',e=>{
+  const li=e.target.closest('li[data-i]')||e.target.closest('.tab');if(li){jump(+li.dataset.i);return}
+  if(Date.now()-swiped<400)return;
+  const p=e.target.closest('.pg');if(!p)return;
+  if(p===pR||cur===0)flip(cur+1);else flip(cur-1);
+});
+bk3d.addEventListener('pointerdown',e=>{sx=e.clientX});
+bk3d.addEventListener('pointerup',e=>{if(sx===null)return;const d=e.clientX-sx;sx=null;if(Math.abs(d)>50&&!busy){swiped=Date.now();flip(cur+(d<0?1:-1))}});
+bk.addEventListener('mousemove',e=>{const li=e.target.closest('li[data-i]');if(!li){hideTip();return}const c=chaps[+li.dataset.i];if(c)showTip('<b>'+esc(c.title||'無題')+'</b><br>'+esc(sumOf(c)),e)});
+bk.addEventListener('mouseleave',hideTip);
+if(document.fonts)document.fonts.ready.then(()=>{if(bk.classList.contains('on'))layout()});
 
-/* ---- 「設定」分頁：數值、物品、驚嚇 ---- */
+/* ---- 「設定」分頁：數值、物品、驚嚇、相簿排序 ---- */
 const ITEMKEY={'無人機':'drone','遙控器':'remote','SW1TCH':'switch','手機':'phone','零錢袋':'pouch','動物面具':'mask','項圈組':'collar','遊樂園的票':'ticket','票':'ticket','筆記本':'note'};
 const yes=v=>!/^(否|關|false|0|no|off|n)$/i.test(String(v).trim());
 function applySettings(R){
@@ -507,6 +622,7 @@ function applySettings(R){
   if(has('驚嚇-貼臉'))SC.face=yes(M['驚嚇-貼臉']);
   if(has('驚嚇-伸手'))SC.hand=yes(M['驚嚇-伸手']);
   if(has('驚嚇-喂'))SC.hey=yes(M['驚嚇-喂']);
+  if(has('相簿排序'))ASC=/^舊/.test(M['相簿排序']);
   thr=rollThr();syncUI();
 }
 
@@ -519,14 +635,16 @@ async function init(){
     catch(e){if(k!=='settings')ST[k]='讀取失敗：請確認試算表已「發布到網路」且連結是 CSV 格式。'}
   };
   await Promise.all([
-    job('story',R=>{chaps=R.map((o,i)=>({order:parseFloat(g(o,'順序','order'))||i+1,title:g(o,'標題','title'),body:g(o,'內文','內容','body'),c:g(o,'顏色','顏色(選填)','color')})).filter(c=>c.title||c.body).sort((a,b)=>a.order-b.order)}),
+    job('story',R=>{chaps=R.map((o,i)=>({order:parseFloat(g(o,'順序','order'))||i+1,title:g(o,'標題','title'),sum:g(o,'摘要','Summary','summary','簡介'),body:g(o,'內文','內容','body'),c:g(o,'顏色','顏色(選填)','color')})).filter(c=>c.title||c.body).sort((a,b)=>a.order-b.order)}),
     job('album',R=>{photos=R.map(o=>({date:g(o,'日期','date'),title:g(o,'標題','title'),desc:g(o,'說明','描述','description','caption'),img:imgUrl(g(o,'圖片網址','圖片','image')),url:g(o,'跳轉網址','連結','網址','url')})).filter(p=>p.img)}),
     job('settings',applySettings)
   ]);
   drawBook();drawAlbum();
 }
 addEventListener('DOMContentLoaded',init);
+})();
 </script>
+<div id="tip"></div>
 <div id="scare"><svg viewBox="0 0 100 108" aria-hidden="true"><path d="M12 40L16 2L42 24Q50 22 58 24L84 2L88 40Q92 70 70 96Q50 108 30 96Q8 70 12 40Z" fill="#161616" stroke="#d8d8d8" stroke-width="1.6"/><polygon points="20,42 42,50 38,62 18,54" fill="#f2f2f2"/><polygon points="80,42 58,50 62,62 82,54" fill="#f2f2f2"/><circle cx="31" cy="54" r="2.4" fill="#000"/><circle cx="69" cy="54" r="2.4" fill="#000"/><polygon points="46,68 54,68 50,75" fill="#b5523b"/><path d="M22 80Q50 100 78 80L73 87L67 82L61 91L55 83L50 93L45 83L39 91L33 82L27 87Z" fill="#f2f2f2"/></svg></div>
 <div id="hey"><div class="hb"><b>喂！</b></div></div>
 <script>
