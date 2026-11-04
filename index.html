@@ -151,6 +151,9 @@ a.lk{text-decoration:underline}
 #bnav{position:absolute;left:0;right:0;bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:12px;justify-content:center;align-items:center}
 #pi{min-width:70px;text-align:center}
 #tabs{position:absolute;left:100%;top:18px;display:flex;flex-direction:column;gap:6px;transition:opacity .4s}
+#grid{display:block;padding-bottom:20px}
+.bkw{width:min(1000px,calc(100vw - 54px));height:min(700px,calc(100vh - 120px))}
+@supports (height:100dvh){.bkw{height:min(700px,calc(100dvh - 120px))}}
 @media (prefers-reduced-motion:reduce){.show .pop,.sw{animation:none}.item,#bagr{transition:none}}
 </style>
 </head>
@@ -532,7 +535,7 @@ function flowHTML(nums){
 }
 function flowStyle(){return 'width:'+G.tw+'px;height:'+G.th+'px;column-width:'+G.tw+'px;column-gap:'+(2*PADX)+'px'}
 function layout(){
-  const W=bk3d.clientWidth,H=bk3d.clientHeight;if(!W||!H)return;
+  const W=bk3d.clientWidth,H=bk3d.clientHeight;if(!W||!H){if(bk.classList.contains('on')&&(layout.t=(layout.t||0)+1)<20)setTimeout(layout,100);return}layout.t=0;
   single=innerWidth<=760;bk3d.classList.toggle('one',single);
   G.pw=single?W:W/2;G.tw=Math.max(80,G.pw-2*PADX);G.th=Math.max(80,H-PADT-PADB);G.step=G.tw+2*PADX;G.base=single?1:2;
   msr.className='flow';msr.style.cssText='position:absolute;left:0;top:0;visibility:hidden;pointer-events:none;overflow:hidden;'+flowStyle();
@@ -567,7 +570,7 @@ function paint(){
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',i===a));
 }
 function flip(s2){
-  if(busy||s2===cur||s2<0||s2>G.maxS)return;busy=true;hideTip();
+  if(busy||s2===cur||s2<0||s2>G.maxS)return;busy=true;hideTip();setTimeout(()=>{busy=false},1500);
   const nx=s2>cur;
   const front=nx?RP(cur):RP(s2),back=single?-1:(nx?LP(s2):LP(cur)),uL=nx?LP(cur):LP(s2),uR=nx?RP(s2):RP(cur);
   setPg(pL,uL);setPg(pR,uR);
@@ -623,6 +626,17 @@ function applySettings(R){
   if(has('驚嚇-伸手'))SC.hand=yes(M['驚嚇-伸手']);
   if(has('驚嚇-喂'))SC.hey=yes(M['驚嚇-喂']);
   if(has('相簿排序'))ASC=/^舊/.test(M['相簿排序']);
+  /* 物品說明文字與對話文字（可在試算表直接改） */
+  const TK={'無人機':'drone','遙控器':'remote','SW1TCH':'switch','零錢袋':'pouch','代幣':'token','動物面具':'mask','項圈組':'collar','遊樂園的票':'ticket','票':'ticket'};
+  R.forEach(o=>{
+    const k=g(o,'項目','key','名稱'),v=g(o,'值','value');if(!k||!v)return;
+    const m=k.match(/^說明[-－:：]\s*(.+)$/);
+    if(m&&TK[m[1]]&&D[TK[m[1]]])D[TK[m[1]]].text=v;
+    else if(k==='文字-喂之後')D.hey.text=v;
+    else if(k==='文字-伸手之後')D.hand.text=v;
+    else if(k==='文字-收起來之後'){window.TXT=window.TXT||{};window.TXT.packed=v}
+    else if(k==='開場文字'&&$('#tx').classList.contains('idle'))$('#tx').textContent=v;
+  });
   thr=rollThr();syncUI();
 }
 
@@ -713,7 +727,7 @@ $('#hey').onclick=()=>{$('#hey').classList.remove('on');clearTimeout(SCARES._h);
 
 /* 一鍵收起：物品飛回包包再站起來 */
 function packAll(){
-  const live=out(),M='隨意地把包包恢復原狀。';spill.classList.add('hid');
+  const live=out(),M=(window.TXT&&window.TXT.packed)||'隨意地把包包恢復原狀。';spill.classList.add('hid');
   if(!open||!live.length){live.forEach(p=>p.classList.add('packed'));closeBag(M);return}
   live.forEach((p,i)=>{const po=p.firstElementChild;
     po.style.setProperty('--tx',((parseFloat(po.style.getPropertyValue('--sx'))||0)-(+p.dataset.dx||0))+'px');
