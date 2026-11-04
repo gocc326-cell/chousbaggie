@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>周荒的背包</title>
+<!-- 用 Google 試算表更新內容：請看底部 script 開頭的 SHEETS 設定 -->
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#101010;--ln:#d8d8d8;--mut:#8a8a8a;--acc:#b5523b;--ink:#181818;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ln);font-family:"DotGothic16","PingFang TC","Noto Sans TC","Microsoft JhengHei",monospace;min-height:100vh}
+.wrap{max-width:900px;margin:0 auto;padding:12px}
+h1{font-size:15px;font-weight:400;color:var(--mut);margin:4px 0 10px;letter-spacing:.15em}
+.stage{position:relative}
+svg{display:block;width:100%;height:auto;border:3px solid #3a3a3a;touch-action:pan-y}
+#hud{position:absolute;top:8px;left:8px;right:8px;display:flex;gap:6px;justify-content:space-between;pointer-events:none}
+.chip{flex:1;max-width:200px;background:rgba(16,16,16,.8);border:2px solid var(--ln);padding:3px 7px;font-size:clamp(10px,2.5vw,14px);white-space:nowrap}
+.chip b{color:var(--acc);float:right}
+.bar{height:6px;border:1px solid var(--ln);margin-top:3px}.bar i{display:block;height:100%;background:var(--acc);width:0}
+.ln{fill:none;stroke:var(--ln);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.k{fill:var(--ink)}.g{fill:#6c6c6c}.a{stroke:var(--acc)}.fa{fill:var(--acc);stroke:none}.fl{fill:var(--ln);stroke:none}
+.sh{fill:url(#ht);stroke:none}
+.cy{fill:#c9a94e;stroke:#111;stroke-width:1.5}
+.tk{font-family:Caveat,cursive;font-weight:600}
+.item,.hd{filter:url(#hand)}
+.item{cursor:pointer;transition:transform .12s;outline:none}
+.pk .item{cursor:grab;touch-action:none}
+.item:hover,.item:focus-visible{transform:translateY(-4px)}
+.item:hover .ln:not(.a),.item:focus-visible .ln:not(.a){stroke:var(--acc)}
+.hid,.pk.gone,.pk.packed{display:none}
+#bagr{transition:transform .7s cubic-bezier(.5,0,.7,1.3);transform-box:fill-box;transform-origin:0% 100%}
+#bagr.tip{transform:rotate(-90deg)}
+.sw{animation:sw 3s ease-in-out infinite}
+@keyframes sw{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+@keyframes pop{from{transform:translate(var(--sx),var(--sy)) scale(.3) rotate(-40deg);opacity:0}to{transform:none;opacity:1}}
+.show .pop{animation:pop .55s cubic-bezier(.2,.9,.3,1.15) var(--d,0s) both}
+#dlg{margin-top:12px;border:3px solid var(--ln);background:var(--ink);padding:14px 16px 16px;min-height:118px;cursor:pointer;box-shadow:4px 4px 0 #2c2c2c}
+#nm{display:inline-block;background:var(--acc);color:#111;padding:1px 10px;margin-bottom:8px;font-size:13px}
+#tx{font-size:15px;line-height:1.7;max-width:60ch}
+#tx.idle,.mut{color:var(--mut)}
+.hl,.lk{color:var(--acc);font-weight:700}
+em{font-style:normal;text-decoration:underline wavy var(--acc);text-underline-offset:5px}
+details{margin-top:14px;border:2px dashed #3a3a3a;padding:8px 12px;font-size:14px;color:var(--mut)}
+summary{cursor:pointer}
+#ctl{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:10px;align-items:center}
+#ctl label{cursor:pointer}
+#ctl input[type=checkbox]{accent-color:var(--acc)}
+#ctl input[type=number]{width:60px;font:inherit;background:var(--ink);color:var(--ln);border:2px solid var(--ln);padding:2px 4px}
+.ov{position:fixed;inset:0;z-index:50;display:none;padding:calc(10px + env(safe-area-inset-top,0px)) 12px calc(10px + env(safe-area-inset-bottom,0px))}
+.ov.on{display:flex;flex-direction:column}
+.x{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));right:12px;z-index:5}
+.btn,.x{font:inherit;background:var(--ink);color:var(--ln);border:2px solid var(--ln);padding:4px 10px;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.pri{background:var(--acc);color:#111;border-color:var(--acc)}
+.btn:disabled{opacity:.35;cursor:default}
+.ant{display:inline-block;font-size:10px;color:var(--mut);transform:skewX(-18deg);letter-spacing:.12em;margin-top:6px}
+#alb{background:#141414;overflow:auto}
+#alb h2,#ed h2{margin:4px 0 12px;font-weight:400;font-size:18px;letter-spacing:.15em}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;padding-bottom:20px}
+.ph{border:2px solid var(--ln);background:var(--ink);padding:6px;cursor:pointer;transform:rotate(var(--r,0deg))}
+.ph:hover{border-color:var(--acc)}
+.ph img{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:#222}
+.ph p{margin:6px 0 0;font-size:13px;line-height:1.4;word-break:break-all}.ph small{color:var(--mut)}
+#lb{background:rgba(0,0,0,.93);overflow:auto}#lbBox{margin:auto 0;padding:34px 0 14px}
+#lb img{max-width:100%;max-height:58vh;border:3px solid var(--ln)}
+.fm{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+.fm input,.fm textarea{font:inherit;background:var(--ink);color:var(--ln);border:2px solid var(--ln);padding:4px 6px;min-width:0}
+.fm input[type=text],.fm input[type=url]{flex:1 1 150px}
+#ed{background:#161616;overflow:auto}
+.ed1{border:2px dashed #444;padding:10px;flex-direction:column;align-items:stretch}
+.ed1 textarea{width:100%}
+#bk{background:#0d0d0d;padding-right:44px}
+.book{position:relative;flex:1;min-height:0;margin-top:40px;width:100%;max-width:980px;align-self:center;background:#d4cebe;color:#26221f;border:3px solid #000;box-shadow:6px 6px 0 #2a2a2a;display:flex}
+.spiral{width:30px;flex:none;background:radial-gradient(circle at 15px 11px,#0d0d0d 5px,#8a8272 6px,transparent 7px) 0 0/30px 26px repeat-y;border-right:2px solid #a9a290}
+.pgs{position:relative;flex:1;min-width:0}
+#cols{position:absolute;inset:20px 24px 54px;column-count:var(--cols,1);column-gap:44px;column-fill:auto;overflow:hidden;font-size:16px;line-height:1.9;touch-action:pan-y}
+#cols.tn{animation:tn .42s}#cols.tp{animation:tp .42s}
+@keyframes tn{40%{transform:perspective(1200px) rotateY(-12deg) translateX(-12px);opacity:.5}}
+@keyframes tp{40%{transform:perspective(1200px) rotateY(12deg) translateX(12px);opacity:.5}}
+.chap{break-before:column}.chap:first-child{break-before:auto}
+.chap h2{display:table;background:var(--c);color:#fff;padding:2px 12px;margin:0 0 16px;font-weight:400;font-size:18px;transform:rotate(-1.5deg);box-shadow:2px 2px 0 rgba(0,0,0,.25)}
+.chap p,.chap blockquote{margin:0 0 .9em}.chap h3{font-size:17px;margin:.6em 0}
+.chap blockquote{border-left:4px solid var(--c);padding-left:10px;color:#4a443d}
+.chap .hl{color:#8e3a27}
+#nav{position:absolute;left:24px;right:24px;bottom:10px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+#nav .btn{border-color:#26221f;background:#d4cebe;color:#26221f;padding:2px 10px}
+#pi{min-width:60px;text-align:center}
+#tabs{position:absolute;left:100%;top:18px;display:flex;flex-direction:column;gap:6px}
+.tab{writing-mode:vertical-rl;font:inherit;font-size:13px;background:var(--c);color:#fff;border:0;border-radius:0 6px 6px 0;padding:8px 5px;max-height:130px;overflow:hidden;cursor:pointer;box-shadow:2px 2px 0 rgba(0,0,0,.4)}
+.tab.on{padding-right:12px}
+.opt{cursor:pointer;color:var(--acc);font-weight:700}
+.cw{transition:transform .8s cubic-bezier(.4,0,.6,1.5)}
+#bagr.tip .cw{transform:rotate(90deg)}
+#scare{position:fixed;inset:0;z-index:99;display:none;align-items:center;justify-content:center;background:#000;overflow:hidden}
+#scare.on{display:flex;animation:sf .14s steps(2) 8}
+#scare svg{width:min(125vw,125vh);height:auto;flex:none;animation:zm .45s cubic-bezier(.1,.9,.2,1) both,sk .07s linear infinite}
+@keyframes zm{from{transform:scale(.12)}to{transform:scale(1.1)}}
+@keyframes sk{25%{translate:-14px 8px}50%{translate:12px -10px}75%{translate:-8px -12px}}
+@keyframes sf{50%{background:#7a1a10}}
+a.lk{text-decoration:underline}
+#loot.suck .pop{animation:suck .45s cubic-bezier(.5,0,.9,.5) var(--d2,0s) both}
+@keyframes suck{to{transform:translate(var(--tx),var(--ty)) scale(.15) rotate(40deg);opacity:0}}
+#handg{display:none;pointer-events:none}#handg.on{display:inline}
+#hey{position:fixed;inset:0;z-index:99;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6)}
+#hey.on{display:flex}
+.hb{border:8px solid var(--ln);background:var(--ink);padding:5vmin 9vmin;box-shadow:12px 12px 0 var(--acc);transform-origin:var(--ox,50%) var(--oy,100%);animation:hy 2.3s ease both,sk .09s linear 8}
+.hb b{display:block;font-weight:400;font-size:min(28vw,34vh);line-height:1.1;color:var(--ln)}
+@keyframes hy{0%{transform:scale(.1)}12%{transform:scale(1.06)}20%{transform:scale(1)}55%{transform:scale(1)}100%{transform:scale(.02);opacity:.2}}
+#hey.on{animation:hbg 2.3s both}@keyframes hbg{0%,55%{background:rgba(0,0,0,.6)}100%{background:rgba(0,0,0,0)}}
+#tx.sm em{font-size:12px}
+.lbt{margin-top:10px}.cap{max-width:min(640px,92vw);margin:8px auto 0;text-align:left;font-size:14px;line-height:1.8}.cap p{margin:0 0 .7em}.cap .hl{color:var(--acc)}
+@media (prefers-reduced-motion:reduce){.show .pop,.sw{animation:none}.item,#bagr{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>周荒的背包</h1>
+<div class="stage">
+<svg id="scene" viewBox="0 0 800 600" role="img" aria-label="荒廢遊樂園一角，生鏽路燈旁放著周荒的背包">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0c0e0f"/><stop offset=".62" stop-color="#262a29"/><stop offset="1" stop-color="#303330"/></linearGradient>
+<linearGradient id="gr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2c2a"/><stop offset="1" stop-color="#131313"/></linearGradient>
+<linearGradient id="pole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1c1411"/><stop offset=".45" stop-color="#5a3a2c"/><stop offset="1" stop-color="#1a110e"/></linearGradient>
+<radialGradient id="vg" cx=".5" cy=".55" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".7"/></radialGradient>
+<radialGradient id="lt"><stop offset="0" stop-color="#cfcfc8" stop-opacity=".2"/><stop offset="1" stop-color="#cfcfc8" stop-opacity="0"/></radialGradient>
+<pattern id="st" width="34" height="10" patternUnits="userSpaceOnUse"><rect width="17" height="10" fill="#4a3228"/><rect x="17" width="17" height="10" fill="#33363a"/></pattern>
+<pattern id="rs" width="22" height="30" patternUnits="userSpaceOnUse"><rect x="3" y="4" width="7" height="5" fill="#b5523b" opacity=".55"/><rect x="13" y="15" width="6" height="9" fill="#b5523b" opacity=".4"/><rect x="5" y="22" width="4" height="4" fill="#b5523b" opacity=".6"/></pattern>
+<pattern id="ht" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="#6a6a6a" stroke-width="1.2"/></pattern>
+<filter id="hand" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="turbulence" baseFrequency=".035" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="4"/></filter>
+<filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".06" numOctaves="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="5"/></filter>
+<filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="4"/><feColorMatrix values="0 0 0 0 .7 0 0 0 0 .7 0 0 0 0 .7 0 0 0 .6 0"/></filter>
+<g id="tkn"><circle r="8" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="1.5" stroke-dasharray="2 2"/><path d="M-2 -5A5 5 0 1 0 4 3A4 4 0 1 1 -2 -5Z" fill="#fff" fill-opacity=".85"/></g>
+</defs>
+
+<rect width="800" height="600" fill="url(#sky)"/>
+<g opacity=".5" fill="none" stroke="#3b403f" stroke-width="3"><circle cx="540" cy="215" r="135"/><circle cx="540" cy="215" r="100" stroke-width="2"/><path d="M540 215V80M540 215H675M540 215H405M540 215L636 120M540 215L444 120M540 215L636 310M540 215L444 310M540 215L500 372M540 215L590 372"/></g>
+<path d="M0 372V346M26 372V340M52 372V348M78 372V336M104 372V344M130 372V342M156 372V350M182 372V338M208 372V346M0 352H110M130 364H214" stroke="#181a19" stroke-width="4" fill="none"/>
+<path d="M0 372Q30 350 60 366Q90 340 130 368Q170 352 210 372ZM430 372Q470 350 520 372Q560 355 610 372Z" fill="#111413"/>
+<path d="M0 372H800V600H0Z" fill="url(#gr)"/>
+<path d="M400 372L-300 600M400 372L-60 600M400 372L170 600M400 372V600M400 372L630 600M400 372L860 600M400 372L1100 600M0 405H800M0 440H800M0 488H800M0 552H800" stroke="#0c0c0c" stroke-width="2" fill="none" opacity=".9"/>
+<path d="M250 400L262 418L255 432L275 450M560 420L548 440L566 456L556 474M120 520L140 534L130 552" stroke="#0a0a0a" stroke-width="3" fill="none"/>
+<path d="M262 418l-6-12M262 418l2-14M262 418l7-10M548 440l-7-10M548 440l3-13M548 440l8-9" stroke="#46543a" stroke-width="2" fill="none"/>
+<ellipse cx="400" cy="505" rx="340" ry="95" fill="url(#lt)"/>
+<g><polygon points="606,112 644,140 644,432 606,446" fill="#1b1d1c"/><rect x="644" y="140" width="156" height="292" fill="#2a2c2b"/>
+<polygon points="596,112 800,140 800,198 770,186 748,208 716,190 690,206 660,188 632,204 606,190" fill="url(#st)"/>
+<rect x="668" y="226" width="104" height="84" fill="#0b0c0c" stroke="#3a3b39" stroke-width="4"/>
+<path d="M660 240L780 214M660 296L780 266" stroke="#4a3a2e" stroke-width="12"/>
+<rect x="660" y="312" width="120" height="10" fill="#3a3b39"/>
+<polygon points="650,160 676,166 668,196 652,190" fill="#3d3f3c"/><polygon points="770,330 796,326 792,380 774,372" fill="#3d3f3c"/>
+<path d="M690 322V400M730 322V420M756 322V380" stroke="#b5523b" stroke-opacity=".28" stroke-width="6"/>
+<rect x="606" y="432" width="194" height="22" fill="#000" opacity=".4"/></g>
+<g filter="url(#rough)"><polygon points="16,-10 42,-10 48,466 10,466" fill="url(#pole)"/><polygon points="16,-10 42,-10 48,466 10,466" fill="url(#rs)"/>
+<line x1="26" y1="0" x2="28" y2="460" stroke="#8a6a58" stroke-opacity=".35" stroke-width="3"/>
+<rect x="-2" y="456" width="62" height="14" fill="#2a1e19" stroke="#0c0908" stroke-width="2"/>
+<path d="M28 40Q30 4 108 8" fill="none" stroke="#33251f" stroke-width="12"/>
+<polygon points="92,2 152,-4 164,24 96,28" fill="#2a1f1a" stroke="#0c0908" stroke-width="2"/>
+<path d="M104 24L116 31L122 22L134 30L146 24M132 28Q140 70 126 96" fill="none" stroke="#9a9a96" stroke-width="1.5" opacity=".6"/></g>
+
+<!-- 背包（後背包＋小掛飾） -->
+<g id="bagg" transform="translate(300,212) scale(.95)"><g id="bagr"><g class="item" data-k="bag" tabindex="0" role="button" aria-label="背包">
+<path class="ln k" d="M30 60Q30 20 100 20Q170 20 170 60L182 240Q182 268 100 268Q18 268 18 240Z"/>
+<path class="sh" d="M150 82L170 60L182 240Q182 262 160 266Z"/>
+<path class="ln g" d="M26 64Q30 14 100 14Q170 14 174 64Q100 98 26 64Z"/>
+<path class="ln" d="M84 16Q100 -10 116 16"/>
+<rect class="ln k a" x="92" y="72" width="16" height="56"/><rect class="ln a" x="88" y="118" width="24" height="12"/>
+<path class="ln k" d="M44 152Q100 136 156 152L160 236Q100 252 40 236Z"/>
+<path class="ln" d="M48 164Q100 148 152 164" stroke-dasharray="4 4"/><rect class="fa" x="146" y="154" width="8" height="12"/>
+<path class="ln k" d="M18 168Q-4 174 0 214Q6 234 22 232"/>
+<g transform="translate(150,166)"><g class="cw"><g class="sw"><line class="ln" x1="0" y1="0" x2="0" y2="20"/>
+<g transform="translate(0,38)">
+<path d="M-8 14L8 14L10 27L-10 27Z" fill="#8a4a3c" stroke="#111" stroke-width="1.6"/>
+<path d="M-8 16L-14 22M8 16L14 22M-6 27V33M6 27V33" stroke="#111" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+<ellipse cx="-6" cy="35" rx="5.5" ry="3" fill="#8a4a3c" stroke="#111" stroke-width="1.4"/><ellipse cx="6" cy="35" rx="5.5" ry="3" fill="#8a4a3c" stroke="#111" stroke-width="1.4"/>
+<circle r="14" fill="#ecc9b0" stroke="#111" stroke-width="1.8"/>
+<path d="M-15 -2Q-16 -19 0 -19Q16 -19 15 -2L10 -9L6 -3L0 -10L-6 -3L-10 -9Z" fill="#7a3a30" stroke="#111" stroke-width="1.6" stroke-linejoin="round"/>
+<rect x="-12" y="-17" width="24" height="7" rx="3.5" fill="#9fc0d6" stroke="#c8793a" stroke-width="2"/>
+<circle cx="-5" cy="2" r="3" fill="#111"/><circle cx="5" cy="2" r="3" fill="#111"/><circle cx="-4" cy="1" r="1" fill="#e8c24a"/><circle cx="6" cy="1" r="1" fill="#e8c24a"/>
+<path d="M-3 8Q0 12 3 8Z" fill="#d9715f"/><rect x="7" y="3" width="6" height="3" fill="#fff" stroke="#111" stroke-width=".8" transform="rotate(-25 10 4)"/>
+</g></g></g></g>
+</g></g></g>
+
+<!-- 散落的物品（可拖回包包） -->
+<g id="loot" class="hid">
+<g class="pk" data-k="pouch" data-x="440" data-y="395" data-r="0"><g class="pop" style="--sx:-310px;--sy:-65px;--d:0s"><g class="item" data-k="pouch" tabindex="0" role="button" aria-label="零錢袋">
+<path class="ln k" d="M20 20Q-5 50 5 85Q40 100 75 85Q85 50 60 20Z"/><polyline class="ln" points="18,14 30,22 40,14 50,22 62,14"/>
+<path class="ln a" d="M40 20Q30 4 20 8M40 20Q50 4 60 8"/><path class="sh" d="M8 70Q40 88 72 70L75 85Q40 100 5 85Z"/>
+<text x="40" y="68" text-anchor="middle" font-size="24" class="fl" font-family="DotGothic16,monospace">¥</text>
+</g></g></g>
+<g class="pk" data-k="drone" data-x="30" data-y="492" data-r="0"><g class="pop" style="--sx:65px;--sy:-159px;--d:.06s"><g class="item" data-k="drone" tabindex="0" role="button" aria-label="破損的無人機">
+<rect class="ln k" x="50" y="30" width="60" height="26"/><rect class="sh" x="50" y="43" width="60" height="13"/>
+<rect class="ln k" x="68" y="56" width="24" height="16"/><circle class="ln a" cx="80" cy="64" r="4"/>
+<path class="ln" d="M50 34L14 14M2 10L28 18M50 52L14 72M110 34L138 18M110 52L130 66M18 88L46 94"/><polyline class="ln" points="138,18 146,24 139,29"/>
+<polyline class="ln a" points="70,30 78,40 72,46 82,56"/>
+</g></g></g>
+<g class="pk" data-k="remote" data-x="92" data-y="528" data-r="-14"><g class="pop" style="--sx:28px;--sy:-177px;--d:.12s"><g class="item" data-k="remote" tabindex="0" role="button" aria-label="遙控器">
+<rect class="ln k" width="100" height="58"/><rect class="sh" y="44" width="100" height="14"/><line class="ln" x1="50" y1="0" x2="50" y2="-14"/>
+<rect class="ln" x="38" y="8" width="24" height="10"/><circle class="ln" cx="24" cy="38" r="11"/><circle class="ln" cx="76" cy="38" r="11"/>
+<rect class="fa" x="21" y="35" width="6" height="6"/><rect class="fl" x="73" y="35" width="6" height="6"/>
+</g></g></g>
+<g class="pk" data-k="switch" data-x="330" data-y="500" data-r="3"><g class="pop" style="--sx:-236px;--sy:-156px;--d:.18s"><g class="item" data-k="switch" tabindex="0" role="button" aria-label="SW1TCH">
+<rect class="ln k" width="30" height="72"/><rect class="ln k" x="34" y="4" width="84" height="64"/>
+<rect class="ln" x="42" y="12" width="68" height="48" style="fill:#0b0b0b;stroke:#555"/><path class="ln" d="M68 30L84 44M84 30L68 44" style="stroke:#555;stroke-width:2"/>
+<rect class="ln k" x="122" width="30" height="72"/><circle class="ln" cx="15" cy="20" r="7"/><circle class="ln" cx="137" cy="48" r="7"/>
+<rect class="fa" x="12" y="54" width="6" height="6"/><rect class="fl" x="133" y="14" width="5" height="5"/><rect class="fl" x="141" y="22" width="5" height="5"/>
+</g></g></g>
+<g class="pk" data-k="phone" data-x="560" data-y="405" data-r="10"><g class="pop" style="--sx:-415px;--sy:-61px;--d:.24s"><g class="item" data-k="phone" tabindex="0" role="button" aria-label="手機">
+<rect class="ln k" width="40" height="72" rx="6"/><rect class="ln" x="4" y="8" width="32" height="52" rx="2" style="fill:#0b0b0b;stroke:#555;stroke-width:1.6"/>
+<rect x="10" y="38" width="4" height="8" fill="#555"/><rect x="17" y="32" width="4" height="14" fill="#555"/><rect x="24" y="26" width="4" height="20" fill="#555"/>
+<path class="ln a" d="M8 22L32 50"/><circle class="ln" cx="20" cy="66" r="2.5" style="stroke-width:1.5"/>
+</g></g></g>
+<g class="pk" data-k="ticket" data-x="500" data-y="525" data-r="7"><g class="pop" style="--sx:-380px;--sy:-173px;--d:.3s"><g class="item" data-k="ticket" tabindex="0" role="button" aria-label="遊樂園的票">
+<path class="ln k" d="M0 0H100V20A6 6 0 0 0 100 36V56H0V36A6 6 0 0 0 0 20Z"/><path class="ln" d="M72 5V51" stroke-dasharray="3 4" style="stroke-width:1.6"/>
+<path class="ln a" d="M20 8A10 10 0 1 0 28 27A8 8 0 1 1 20 8Z"/>
+<polyline class="ln" points="40,28 40,18 43,18 43,21 46,21 46,15 49,15 49,21 52,21 52,18 55,18 55,28 40,28" style="stroke-width:1.8"/>
+<text x="10" y="46" class="fl tk" font-size="15">Anesidora</text><text x="88" y="46" class="fl tk" font-size="12" transform="rotate(-90 88 46)">PARK</text><text transform="translate(8,53.5) skewX(-22)" font-size="4.4" class="fl">祝̷你̸有̶段̵美̴妙̷旅̶程̸ ▚▞</text>
+</g></g></g>
+<g class="pk" data-k="note" data-x="705" data-y="395" data-r="4"><g class="pop" style="--sx:-570px;--sy:-65px;--d:.36s"><g class="item" data-k="note" tabindex="0" role="button" aria-label="筆記本">
+<rect class="ln k" x="8" width="62" height="90"/><rect class="sh" x="8" y="62" width="16" height="28"/>
+<path class="ln" d="M2 12H14M2 28H14M2 44H14M2 60H14M2 76H14"/>
+<rect class="ln" x="26" y="14" width="34" height="22"/><path class="ln" d="M31 22H54M31 29H48" style="stroke-width:1.6"/>
+<line class="ln a" x1="52" y1="0" x2="52" y2="90"/><polygon class="ln a" points="30,90 30,101 34,97 38,101 38,90"/>
+</g></g></g>
+<g class="pk" data-k="collar" data-x="205" data-y="492" data-r="-3"><g class="pop" style="--sx:-90px;--sy:-165px;--d:.48s"><g class="item" data-k="collar" tabindex="0" role="button" aria-label="項圈組">
+<path class="ln" d="M10 56Q10 6 55 6Q100 6 100 56" style="stroke-width:3.4"/>
+<path class="ln g" d="M14 36L5 3L36 19Z"/><path class="ln g" d="M96 36L105 3L74 19Z"/>
+<path class="fl" d="M12 12l5 3-2 6zM98 12l-5 3 2 6z"/>
+<ellipse class="ln" cx="62" cy="68" rx="42" ry="12" style="fill:#8e3326;stroke:#d8d8d8"/>
+<ellipse cx="62" cy="66" rx="36" ry="8" fill="#241311"/>
+<path class="ln" d="M20 70Q62 92 104 70V79Q62 101 20 79Z" style="fill:#9a3a2b"/>
+<rect class="ln" x="86" y="80" width="10" height="9" style="stroke:#c9a94e;stroke-width:1.8"/>
+<circle cx="40" cy="88" r="1.6" fill="#c9a94e"/><circle cx="62" cy="92" r="1.6" fill="#c9a94e"/>
+</g></g></g>
+<g class="pk" data-k="mask" data-x="620" data-y="485" data-r="-4"><g class="pop" style="--sx:-500px;--sy:-159px;--d:.42s"><g class="item" data-k="mask" tabindex="0" role="button" aria-label="貓咪面具">
+<path class="ln k" d="M12 40L16 2L42 24Q50 22 58 24L84 2L88 40Q92 70 70 96Q50 108 30 96Q8 70 12 40Z"/>
+<polygon class="sh" points="14,66 30,94 40,88 28,70"/><polygon class="sh" points="86,66 70,94 60,88 72,70"/>
+<polygon class="fl" points="22,44 42,50 38,58 20,52"/><polygon class="fl" points="78,44 58,50 62,58 80,52"/>
+<polygon class="fa" points="46,68 54,68 50,74"/><path class="ln" d="M30 76L8 72M30 82L8 86M70 76L92 72M70 82L92 86" style="stroke-width:1.8"/>
+<polyline class="ln a" points="22,12 27,8 31,18"/><polyline class="ln a" points="78,12 73,8 69,18"/>
+</g></g></g>
+</g>
+
+<!-- 零錢袋灑出：500圓與三色代幣 -->
+<g id="spill" class="hid">
+<g transform="translate(350,420)"><g class="pop" style="--sx:130px;--sy:25px;--d:0s"><g class="hd"><circle class="ln k" r="11"/><text class="fl" y="3" text-anchor="middle" font-size="9" font-family="monospace">500</text></g></g></g>
+<g transform="translate(385,408)"><g class="pop" style="--sx:95px;--sy:37px;--d:.05s"><g class="hd"><circle class="ln k" r="11"/><text class="fl" y="3" text-anchor="middle" font-size="9" font-family="monospace">500</text></g></g></g>
+<g transform="translate(420,430)"><g class="pop" style="--sx:60px;--sy:15px;--d:.1s"><g class="hd"><circle class="ln k" r="11"/><text class="fl" y="3" text-anchor="middle" font-size="9" font-family="monospace">500</text></g></g></g>
+<g transform="translate(380,470)"><g class="pop" style="--sx:100px;--sy:-25px;--d:.2s"><g class="item" data-k="token" tabindex="0" role="button" aria-label="綠色代幣"><circle class="ln" r="13" style="fill:#4f9a4a"/><use href="#tkn"/></g></g></g>
+</g>
+
+<g id="handg"><g class="hand"><g class="hd">
+<rect x="500" y="404" width="520" height="84" rx="38" fill="#cdc4b5" stroke="#111" stroke-width="3"/>
+<ellipse cx="490" cy="440" rx="80" ry="54" fill="#cdc4b5" stroke="#111" stroke-width="3"/>
+<g fill="#cdc4b5" stroke="#111" stroke-width="3"><rect x="262" y="396" width="236" height="24" rx="12"/><rect x="238" y="422" width="262" height="24" rx="12"/><rect x="250" y="448" width="250" height="24" rx="12"/><rect x="290" y="474" width="210" height="22" rx="11"/><rect x="352" y="498" width="150" height="26" rx="13" transform="rotate(-16 500 500)"/></g>
+<path d="M300 408H340M280 434H330M290 460H335M330 485H365M440 400Q470 430 450 480" stroke="#111" stroke-width="2" fill="none" opacity=".45"/>
+</g></g></g>
+<rect width="800" height="600" fill="url(#vg)" pointer-events="none"/>
+<rect width="800" height="600" filter="url(#grain)" opacity=".2" pointer-events="none" style="mix-blend-mode:overlay"/>
+</svg>
+<div id="hud"></div>
+</div>
+
+<div id="dlg" aria-live="polite"><div id="nm" hidden></div><div id="tx" class="idle">周荒不在，這裡只有他的背包。</div></div>
+<details id="adm" style="display:none"><summary>本機預覽（網址後加 #admin 才會出現；不會儲存，要永久修改請改試算表）</summary><div id="ctl"></div></details>
+</div>
+
+<script>
+/* 筆記本連結：之後把 Notion / Excel 網址貼在這裡 */
+const NOTE_URL='';
+
+const D={
+bag:{name:'荒寶的包包',text:'周荒的東西散落一地。\n*偷看*或者*收起來*？',opts:['peek','pack']},
+peek:{name:'荒寶的包包',text:'周荒像倉鼠往囊頰裡塞食物一樣，藏了很多東西。\n*再看一下？*',opts:['again'],small:1},
+hey:{name:'',text:'沒看過的*人*，那是誰？'},
+hand:{name:'',text:'⋯⋯'},
+drone:{name:'破損的無人機',text:'爸爸送的生日禮物。\n槳和頭部的機械結構都被*外力*暴力折斷了。'},
+remote:{name:'遙控器',text:'控制無人機的手把。'},
+switch:{name:'SW1TCH',text:'從⏹︎⏹︎⏹︎⏹︎⏹︎那邊借來的新玩具。沒電。'},
+phone:{name:'手機',text:'沒有訊號。'},
+pouch:{name:'零錢袋',text:'日圓。還有在**遊樂園**地上撿到的**代幣**。'},
+token:{name:'代幣',text:'大人說代幣是好東西。我要收好。【目前持有：**{n}**枚】'},
+mask:{name:'動物面具',text:'動物面具人給我的咪寶面具。'},
+collar:{name:'項圈組',text:'咪咪喵喵汪汪汪。'},
+ticket:{name:'遊樂園的票',text:'**安妮斯朵拉主題樂園**。',ant:'祝你有段美妙旅程',href:'https://aadop2021.wixsite.com/aad2026'},
+note:{name:'筆記本',text:'記著故事的筆記本。',link:1}
+};
+const LABEL={drone:'無人機',remote:'遙控器',switch:'SW1TCH',phone:'手機',pouch:'零錢袋',mask:'動物面具',collar:'項圈組',ticket:'遊樂園的票',note:'筆記本'};
+const SN={hp:'體力',mind:'精神值',act:'活躍度'};
+const S={hp:100,mind:60,act:0};
+let tokens=6,cur=null,timer,open=false;
+const $=s=>document.querySelector(s),sv=$('#scene'),nm=$('#nm'),tx=$('#tx'),spill=$('#spill'),loot=$('#loot'),bagr=$('#bagr');
+const pks=[...document.querySelectorAll('.pk')];
+
+/* ---- 對話框 ---- */
+function parse(t){const o=[];let b=0,i=0;t.split(/(\*\*|\*)/).forEach(s=>{if(s==='**')b^=1;else if(s==='*')i^=1;else[...s].forEach(c=>o.push([c,b,i]))});return o}
+function render(a,n){const it=D[cur]||{};let g=-1,pi=0;tx.innerHTML=a.slice(0,n).map(([c,b,i])=>{c=c==='\n'?'<br>':c;if(i&&!pi)g++;pi=i;return b?(it.href?'<a class="lk" href="'+it.href+'" target="_blank" rel="noopener">'+c+'</a>':'<span class="hl">'+c+'</span>'):i?'<em'+(it.opts?' class="opt" data-o="'+g+'"':'')+'>'+c+'</em>':c}).join('')}
+function done(it){if(it.ant)tx.insertAdjacentHTML('beforeend','<br><span class="ant">'+zal(it.ant)+'</span>');if(it.link)tx.insertAdjacentHTML('beforeend','<br>'+(NOTE_URL?'<a class="lk" href="'+NOTE_URL+'" target="_blank" rel="noopener">翻開筆記本 ▸</a>':'<span class="mut">（連結尚未設定）</span>'))}
+function say(k,instant){
+  cur=k;const it=D[k];nm.hidden=!it.name;nm.textContent=it.name;tx.className=it.small?'sm':'';
+  const a=parse(it.text.replace('{n}',tokens));clearInterval(timer);
+  if(instant){render(a,a.length);done(it);return}
+  let n=0;timer=setInterval(()=>{n++;render(a,n);if(n>=a.length){clearInterval(timer);done(it)}},40);
+}
+function hint(t){cur=null;clearInterval(timer);nm.hidden=false;nm.textContent='荒寶的包包';tx.className='idle';tx.textContent=t}
+$('#dlg').addEventListener('click',()=>{if(cur){clearInterval(timer);say(cur,true)}});
+
+/* ---- 背包倒下／收回 ---- */
+function setT(p,dx,dy){p.setAttribute('transform','translate('+(+p.dataset.x+dx)+','+(+p.dataset.y+dy)+') rotate('+p.dataset.r+')')}
+function reshow(g){g.classList.remove('hid','show');void g.getBoundingClientRect();g.classList.add('show')}
+const out=()=>pks.filter(p=>!p.classList.contains('gone')&&!p.classList.contains('packed'));
+function openBag(){
+  open=true;bagr.classList.add('tip');
+  pks.forEach(p=>{p.classList.remove('packed');p.dataset.dx=0;p.dataset.dy=0;setT(p,0,0)});
+  reshow(loot);say('bag');bump();
+}
+function closeBag(m){open=false;bagr.classList.remove('tip');loot.classList.add('hid');spill.classList.add('hid');hint(m||'全部收好了。')}
+function pack(p){
+  p.classList.add('packed');if(p.dataset.k==='pouch')spill.classList.add('hid');
+  const n=out().length;n?hint('塞回去了。還剩 '+n+' 件。'):closeBag();
+}
+function toggleSpill(){spill.classList.contains('hid')?reshow(spill):spill.classList.add('hid')}
+function act(el){
+  const k=el.dataset.k;
+  if(k==='bag'){openBag();return}
+  if(k==='pouch')toggleSpill();
+  if(k==='phone'){openAlbum();return}
+  if(k==='note'){openBook();return}
+  say(k);
+}
+sv.addEventListener('click',e=>{const el=e.target.closest('.item');if(el&&!el.closest('.pk'))act(el)});
+sv.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const el=e.target.closest('.item');if(el){e.preventDefault();act(el)}}});
+
+/* ---- 拖曳物品塞回包包 ---- */
+let dr=null;
+sv.addEventListener('pointerdown',e=>{
+  const it=e.target.closest('.item'),pk=it&&it.closest('.pk');if(!pk)return;
+  dr={pk,it,x:e.clientX,y:e.clientY,m:0,dx:+pk.dataset.dx||0,dy:+pk.dataset.dy||0};
+  sv.setPointerCapture(e.pointerId);
+});
+sv.addEventListener('pointermove',e=>{
+  if(!dr)return;
+  const k=800/sv.getBoundingClientRect().width,mx=e.clientX-dr.x,my=e.clientY-dr.y;
+  if(!dr.m&&Math.hypot(mx,my)<6)return;
+  dr.m=1;dr.nx=dr.dx+mx*k;dr.ny=dr.dy+my*k;setT(dr.pk,dr.nx,dr.ny);
+});
+sv.addEventListener('pointerup',e=>{
+  if(!dr)return;const d=dr;dr=null;
+  if(!d.m){act(d.it);return}
+  d.pk.dataset.dx=d.nx;d.pk.dataset.dy=d.ny;
+  const r=$('#bagg').getBoundingClientRect();
+  if(e.clientX>r.left-8&&e.clientX<r.right+8&&e.clientY>r.top-8&&e.clientY<r.bottom+8)pack(d.pk);
+});
+sv.addEventListener('pointercancel',()=>{dr=null});
+
+/* ---- 數值 HUD ---- */
+$('#hud').innerHTML=Object.keys(S).map(k=>'<div class="chip">'+SN[k]+' <b id="v-'+k+'"></b><div class="bar"><i id="b-'+k+'"></i></div></div>').join('')+'<div class="chip">代幣 <b id="v-tk"></b></div>';
+function hud(){
+  for(const k in S){$('#v-'+k).textContent=S[k];$('#b-'+k).style.width=Math.min(100,S[k])+'%';$('#in-'+k).value=S[k]}
+  $('#v-tk').textContent=tokens;$('#in-tk').value=tokens;
+}
+function setStat(k,v){S[k]=Math.max(0,Math.round(+v)||0);hud()}
+function setTokens(n){tokens=Math.max(0,Math.round(+n)||0);hud();if(cur==='token')say('token',true)}
+
+/* ---- 劇情 API：window.bag ---- */
+function setItem(k,on){
+  const p=pks.find(q=>q.dataset.k===k);if(!p)return;
+  p.classList.toggle('gone',!on);
+  if(on&&open){p.classList.remove('packed');p.dataset.dx=0;p.dataset.dy=0;setT(p,0,0)}
+  if(!on){if(k==='pouch')spill.classList.add('hid');if(open&&!out().length)closeBag()}
+  const cb=document.querySelector('#ctl input[data-k="'+k+'"]');if(cb)cb.checked=on;
+}
+window.bag={add:k=>setItem(k,true),remove:k=>setItem(k,false),setStat,setTokens,getTokens:()=>tokens,stats:S};
+
+/* ---- 控制面板 ---- */
+const ctl=$('#ctl');
+Object.keys(LABEL).forEach(k=>{
+  const l=document.createElement('label');
+  l.innerHTML='<input type="checkbox" data-k="'+k+'" checked> '+LABEL[k];
+  ctl.appendChild(l);
+});
+Object.keys(S).concat('tk').forEach(k=>{
+  const l=document.createElement('label');
+  l.innerHTML=(SN[k]||'代幣')+' <input type="number" min="0" id="in-'+k+'">';
+  ctl.appendChild(l);
+});
+pks.forEach(p=>setT(p,0,0));hud();
+
+/* ---- 載入：背包線條被畫出來 ---- */
+document.querySelectorAll('#bagg .ln').forEach(el=>{
+  try{const L=el.getTotalLength();el.style.strokeDasharray=L;el.style.strokeDashoffset=L;
+  el.getBoundingClientRect();el.style.transition='stroke-dashoffset 1.2s ease-out';el.style.strokeDashoffset=0;
+  setTimeout(()=>{el.style.strokeDasharray='';el.style.strokeDashoffset='';el.style.transition=''},1400)}catch(e){}
+});
+</script>
+<div id="alb" class="ov"><button class="x" data-c="alb">✕ 關上相簿</button><h2>相簿</h2>
+<div id="grid"></div><p id="aEmpty" class="mut"></p></div>
+<div id="bk" class="ov"><button class="x" data-c="bk">✕ 合上</button><div class="book"><div class="spiral"></div><div class="pgs"><div id="cols"></div><div id="nav"><button class="btn" id="pv">‹ 上一頁</button><span id="pi"></span><button class="btn" id="nx">下一頁 ›</button></div></div><div id="tabs"></div></div></div>
+<div id="lb" class="ov"><button class="x" data-c="lb">✕</button><div id="lbBox" style="text-align:center;width:100%"></div></div>
+<script>
+/* ====== 設定：貼上試算表「發布到網路」的 CSV 連結（三個分頁各一條） ====== */
+const SHEETS={
+  story:'https://docs.google.com/spreadsheets/d/e/2PACX-1vReE7DWNkcL2vZuBobt_OmtNi06vjrLgU5sg25d8c-3ErSXy-jqW2sgxcqLd2MpKLrBTym_6R9wxgkZ/pub?gid=1656877798&single=true&output=csv',
+  album:'https://docs.google.com/spreadsheets/d/e/2PACX-1vReE7DWNkcL2vZuBobt_OmtNi06vjrLgU5sg25d8c-3ErSXy-jqW2sgxcqLd2MpKLrBTym_6R9wxgkZ/pub?gid=1222594975&single=true&output=csv',
+  settings:'https://docs.google.com/spreadsheets/d/e/2PACX-1vReE7DWNkcL2vZuBobt_OmtNi06vjrLgU5sg25d8c-3ErSXy-jqW2sgxcqLd2MpKLrBTym_6R9wxgkZ/pub?gid=1414951155&single=true&output=csv'
+};
+
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const okUrl=u=>/^https?:\/\//i.test(u||'');
+function zal(s){const A='\u0334\u0335\u0336\u0337\u0338\u0300\u0301\u0302\u0303\u0308',B='▚▞░▒◌';return[...s].map(c=>c+A[Math.random()*A.length|0]+(Math.random()<.25?B[Math.random()*B.length|0]:'')).join('')}
+let photos=[],shown=[],chaps=[],pg=0,pages=1;
+const ST={story:'讀取中…',album:'讀取中…'};
+const cols=$('#cols'),GAP=44,cs=()=>innerWidth>760?2:1,stp=()=>cols.clientWidth+GAP;
+document.querySelectorAll('.x').forEach(b=>b.onclick=()=>$('#'+b.dataset.c).classList.remove('on'));
+$('#lb').onclick=e=>{if(e.target.id==='lb')$('#lb').classList.remove('on')};
+addEventListener('keydown',e=>{const on=[...document.querySelectorAll('.ov.on')];if(!on.length)return;
+  if(e.key==='Escape')on.pop().classList.remove('on');
+  if($('#bk').classList.contains('on')&&!/INPUT|TEXTAREA/.test(e.target.tagName)){if(e.key==='ArrowRight')go(pg+1);if(e.key==='ArrowLeft')go(pg-1)}});
+
+/* ---- 讀試算表（CSV） ---- */
+function csv(t){
+  const R=[];let r=[],c='',q=false;t=t.replace(/^\uFEFF/,'');
+  for(let i=0;i<t.length;i++){const ch=t[i];
+    if(q){if(ch==='"'){if(t[i+1]==='"'){c+='"';i++}else q=false}else c+=ch}
+    else if(ch==='"')q=true;
+    else if(ch===','){r.push(c);c=''}
+    else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;r.push(c);c='';R.push(r);r=[]}
+    else c+=ch}
+  if(c!==''||r.length){r.push(c);R.push(r)}
+  return R.filter(x=>x.some(v=>v.trim()!==''));
+}
+function rows(t){const R=csv(t);if(!R.length)return[];const H=R[0].map(h=>h.trim());return R.slice(1).map(r=>{const o={};H.forEach((h,i)=>{o[h]=(r[i]||'').trim()});return o})}
+const g=(o,...ks)=>{for(const k of ks)if(o[k]!=null&&o[k]!=='')return o[k];return''};
+async function load(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(r.status);return rows(await r.text())}
+function imgUrl(u){const m=u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]+)/);return m?'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w1400':u}
+const dkey=d=>{const t=Date.parse(String(d).replace(/[.\-]/g,'/'));return isNaN(t)?0:t};
+
+/* ---- 相簿 ---- */
+function openAlbum(){$('#alb').classList.add('on');drawAlbum()}
+function drawAlbum(){
+  shown=[...photos].sort((a,b)=>dkey(b.date)-dkey(a.date));
+  $('#aEmpty').textContent=shown.length?'':(ST.album||'還沒有照片。');
+  $('#grid').innerHTML=shown.map((p,i)=>'<div class="ph" data-i="'+i+'" style="--r:'+((i%3-1)*.8)+'deg"><img loading="lazy" referrerpolicy="no-referrer" alt="" src="'+esc(p.img)+'"><p>'+esc(p.title||'（無標題）')+'<br><small>'+esc(p.date||'')+'</small></p></div>').join('');
+}
+$('#grid').onclick=e=>{const c=e.target.closest('.ph');if(c)openLb(+c.dataset.i)};
+function openLb(i){
+  const p=shown[i];if(!p)return;
+  $('#lbBox').innerHTML='<img referrerpolicy="no-referrer" alt="" src="'+esc(p.img)+'"><div class="lbt"><b>'+esc(p.title||'（無標題）')+'</b> <span class="mut">'+esc(p.date||'')+'</span></div>'+(p.desc?'<div class="cap">'+md(p.desc)+'</div>':'')+(okUrl(p.url)?'<div class="fm" style="justify-content:center"><a class="btn pri" href="'+esc(p.url)+'" target="_blank" rel="noopener">前往原文 ▸</a></div>':'');
+  $('#lb').classList.add('on');
+}
+
+/* ---- 筆記本（翻頁） ---- */
+const COL=['#b5523b','#c9a94e','#6f8a6a','#6c86a0','#8a7f86','#9a6a4f'];
+const colOf=(c,i)=>/^#[0-9a-f]{3,8}$/i.test(c.c||'')?c.c:COL[i%COL.length];
+function md(t){
+  const inl=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<span class="hl">$1</span>').replace(/\*(.+?)\*/g,'<em>$1</em>');
+  return String(t||'').split(/\n{2,}/).map(b=>{b=b.trim();if(!b)return'';
+    if(/^#{1,3} /.test(b))return'<h3>'+inl(b.replace(/^#+ /,''))+'</h3>';
+    if(/^(-{3,}|\*{3,})$/.test(b))return'<hr>';
+    if(/^> /.test(b))return'<blockquote>'+inl(b.replace(/^> ?/gm,'')).replace(/\n/g,'<br>')+'</blockquote>';
+    return'<p>'+inl(b).replace(/\n/g,'<br>')+'</p>'}).join('');
+}
+function openBook(){$('#bk').classList.add('on');layout()}
+function drawBook(){
+  cols.innerHTML=chaps.length?chaps.map((c,i)=>'<section class="chap" style="--c:'+colOf(c,i)+'"><h2>'+esc(c.title||'無題')+'</h2>'+md(c.body)+'</section>').join(''):'<section class="chap" style="--c:#6c6c6c"><h2>空白的筆記本</h2><p>'+esc(ST.story||'還沒有故事。')+'</p></section>';
+  $('#tabs').innerHTML=chaps.map((c,i)=>'<button class="tab" data-i="'+i+'" style="--c:'+colOf(c,i)+'">'+esc(c.title||'無題')+'</button>').join('');
+  layout();
+}
+function layout(){
+  if(!$('#bk').classList.contains('on'))return;
+  cols.style.setProperty('--cols',cs());
+  pages=Math.max(1,Math.round((cols.scrollWidth+GAP)/stp()));
+  pg=Math.min(pg,pages-1);cols.scrollLeft=pg*stp();paint();
+}
+function starts(){return chaps.map((c,i)=>{const h=cols.children[i]&&cols.children[i].firstElementChild;return h?Math.floor(h.offsetLeft/stp()+.02):0})}
+function paint(){
+  $('#pi').textContent=(pg+1)+' / '+pages;$('#pv').disabled=pg<=0;$('#nx').disabled=pg>=pages-1;
+  let a=0;starts().forEach((v,i)=>{if(v<=pg)a=i});
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',i===a));
+}
+function go(p){
+  p=Math.max(0,Math.min(pages-1,p));if(p===pg)return;
+  const f=p>pg?'tn':'tp';pg=p;cols.classList.remove('tn','tp');void cols.offsetWidth;cols.classList.add(f);
+  setTimeout(()=>{cols.scrollLeft=pg*stp();paint()},170);setTimeout(()=>cols.classList.remove(f),440);
+}
+$('#pv').onclick=()=>go(pg-1);$('#nx').onclick=()=>go(pg+1);
+$('#tabs').onclick=e=>{const b=e.target.closest('.tab');if(b)go(starts()[+b.dataset.i])};
+let sx=null;cols.addEventListener('pointerdown',e=>{sx=e.clientX});
+cols.addEventListener('pointerup',e=>{if(sx===null)return;const d=e.clientX-sx;sx=null;if(Math.abs(d)>50)go(pg+(d<0?1:-1))});
+addEventListener('resize',layout);if(document.fonts)document.fonts.ready.then(layout);
+
+/* ---- 「設定」分頁：數值、物品、驚嚇 ---- */
+const ITEMKEY={'無人機':'drone','遙控器':'remote','SW1TCH':'switch','手機':'phone','零錢袋':'pouch','動物面具':'mask','項圈組':'collar','遊樂園的票':'ticket','票':'ticket','筆記本':'note'};
+const yes=v=>!/^(否|關|false|0|no|off|n)$/i.test(String(v).trim());
+function applySettings(R){
+  const M={};
+  R.forEach(o=>{const k=g(o,'項目','key','名稱'),v=g(o,'值','value');if(k)M[k.replace(/^物品[-－:：]\s*/,'')]=v});
+  const has=k=>M[k]!=null&&M[k]!=='';
+  if(has('體力'))setStat('hp',M['體力']);
+  if(has('精神值'))setStat('mind',M['精神值']);
+  if(has('活躍度'))setStat('act',M['活躍度']);
+  if(has('代幣'))setTokens(M['代幣']);
+  Object.keys(ITEMKEY).forEach(k=>{if(has(k))setItem(ITEMKEY[k],yes(M[k]))});
+  if(has('驚嚇開關'))SC.on=yes(M['驚嚇開關']);
+  if(has('驚嚇最少次數'))SC.min=Math.max(1,+M['驚嚇最少次數']||5);
+  if(has('驚嚇最多次數'))SC.max=Math.max(SC.min,+M['驚嚇最多次數']||8);
+  if(has('音量'))SC.vol=Math.max(0,Math.min(100,+M['音量']||0));
+  if(has('驚嚇-貼臉'))SC.face=yes(M['驚嚇-貼臉']);
+  if(has('驚嚇-伸手'))SC.hand=yes(M['驚嚇-伸手']);
+  if(has('驚嚇-喂'))SC.hey=yes(M['驚嚇-喂']);
+  thr=rollThr();syncUI();
+}
+
+/* ---- 啟動 ---- */
+async function init(){
+  if(location.hash==='#admin')$('#adm').style.display='';
+  const job=async(k,fn)=>{
+    if(!SHEETS[k]){if(k!=='settings')ST[k]='（尚未設定「'+(k==='story'?'故事':'相簿')+'」的試算表連結）';return}
+    try{fn(await load(SHEETS[k]));ST[k]=''}
+    catch(e){if(k!=='settings')ST[k]='讀取失敗：請確認試算表已「發布到網路」且連結是 CSV 格式。'}
+  };
+  await Promise.all([
+    job('story',R=>{chaps=R.map((o,i)=>({order:parseFloat(g(o,'順序','order'))||i+1,title:g(o,'標題','title'),body:g(o,'內文','內容','body'),c:g(o,'顏色','顏色(選填)','color')})).filter(c=>c.title||c.body).sort((a,b)=>a.order-b.order)}),
+    job('album',R=>{photos=R.map(o=>({date:g(o,'日期','date'),title:g(o,'標題','title'),desc:g(o,'說明','描述','description','caption'),img:imgUrl(g(o,'圖片網址','圖片','image')),url:g(o,'跳轉網址','連結','網址','url')})).filter(p=>p.img)}),
+    job('settings',applySettings)
+  ]);
+  drawBook();drawAlbum();
+}
+addEventListener('DOMContentLoaded',init);
+</script>
+<div id="scare"><svg viewBox="0 0 100 108" aria-hidden="true"><path d="M12 40L16 2L42 24Q50 22 58 24L84 2L88 40Q92 70 70 96Q50 108 30 96Q8 70 12 40Z" fill="#161616" stroke="#d8d8d8" stroke-width="1.6"/><polygon points="20,42 42,50 38,62 18,54" fill="#f2f2f2"/><polygon points="80,42 58,50 62,62 82,54" fill="#f2f2f2"/><circle cx="31" cy="54" r="2.4" fill="#000"/><circle cx="69" cy="54" r="2.4" fill="#000"/><polygon points="46,68 54,68 50,75" fill="#b5523b"/><path d="M22 80Q50 100 78 80L73 87L67 82L61 91L55 83L50 93L45 83L39 91L33 82L27 87Z" fill="#f2f2f2"/></svg></div>
+<div id="hey"><div class="hb"><b>喂！</b></div></div>
+<script>
+/* 驚嚇彩蛋設定：有編輯權限者可在「管理設定」調整，按「確定」後套用到所有玩家 */
+const SC={on:true,min:5,max:8,vol:20,face:true,hand:true,hey:true};
+const KINDS={face:'貼臉',hand:'伸手',hey:'喂！'};
+const rollThr=()=>{const a=Math.max(1,SC.min|0),b=Math.max(a,SC.max|0);return a+Math.floor(Math.random()*(b-a+1))};
+let tips=0,thr=rollThr();
+function bump(){if(!SC.on)return;tips++;if(tips>=thr){tips=0;thr=rollThr();setTimeout(()=>scare(),900)}}
+function boom(k,len){try{
+  const v=SC.vol/100*k;if(v<=0)return;
+  const a=new(window.AudioContext||window.webkitAudioContext)(),t=a.currentTime,L=Math.floor(a.sampleRate*len),b=a.createBuffer(1,L,a.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<L;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/L,2);
+  const n=a.createBufferSource(),g=a.createGain();n.buffer=b;g.gain.value=v;n.connect(g);g.connect(a.destination);n.start();
+  const o=a.createOscillator(),og=a.createGain();o.type='sawtooth';o.frequency.setValueAtTime(90,t);o.frequency.exponentialRampToValueAtTime(40,t+len);
+  og.gain.setValueAtTime(v*.7,t);og.gain.exponentialRampToValueAtTime(.001,t+len);o.connect(og);og.connect(a.destination);o.start();o.stop(t+len);
+}catch(e){}}
+function flash(id,ms){const s=$(id);s.classList.remove('on');void s.offsetWidth;s.classList.add('on');clearTimeout(s._t);s._t=setTimeout(()=>s.classList.remove('on'),ms)}
+function ensureOpen(){
+  open=true;bagr.classList.add('tip');
+  pks.forEach(p=>{p.classList.remove('packed');p.dataset.dx=0;p.dataset.dy=0;setT(p,0,0)});
+  reshow(loot);say('bag');
+}
+const WID={pouch:80,drone:150,remote:100,switch:152,phone:40,ticket:100,note:70,collar:110,mask:100};
+const SCARES={
+  face(){flash('#scare',1300);boom(1,.5)},
+  hey(){
+    const h=$('#hey'),hb=h.firstElementChild,d=$('#dlg').getBoundingClientRect();
+    flash('#hey',2300);
+    h.style.setProperty('--ox',(d.left+d.width/2-(innerWidth-hb.offsetWidth)/2)+'px');
+    h.style.setProperty('--oy',(d.top+d.height/2-(innerHeight-hb.offsetHeight)/2)+'px');
+    boom(.8,.25);clearTimeout(SCARES._h);SCARES._h=setTimeout(()=>say('hey'),2300);
+  },
+  hand(){
+    const g=$('#handg'),H=g.querySelector('.hand');
+    const go=()=>{
+      const live=out().map(p=>({p,w:WID[p.dataset.k]||100,x:+p.dataset.x,dx:+p.dataset.dx||0,dy:+p.dataset.dy||0}));
+      g.classList.add('on');H.style.animation='none';boom(.5,.3);
+      const t0=performance.now(),SW=2400,HOLD=450,BK=700,A=662,B=-178;let done=false;
+      (function f(t){
+        const u=t-t0;let T;
+        if(u<SW){
+          const r=u/SW,e=r<.5?2*r*r:1-Math.pow(-2*r+2,2)/2;T=A+(B-A)*e;const fx=238+T;
+          live.forEach(o=>{
+            if(o.p.classList.contains('packed'))return;
+            const nx=fx-o.w-o.x;if(nx<o.dx){o.dx=nx;o.p.dataset.dx=nx;setT(o.p,nx,o.dy)}
+            if(fx<300&&fx<o.x+o.dx+o.w+1)o.p.classList.add('packed');
+          });
+        }else if(u<SW+HOLD){
+          T=B;
+          if(!done){done=true;live.forEach(o=>o.p.classList.add('packed'));spill.classList.add('hid');closeBag();say('hand');boom(.4,.2)}
+        }else{const r=Math.min(1,(u-SW-HOLD)/BK);T=B+(A-B)*r*r}
+        H.style.transform='translate('+T+'px,'+(52+Math.sin(u/90)*5)+'px)';
+        if(u<SW+HOLD+BK)requestAnimationFrame(f);else g.classList.remove('on');
+      })(t0);
+    };
+    if(open)go();else{ensureOpen();setTimeout(go,1000)}
+  }
+};
+function scare(k){
+  if(!k){const ks=Object.keys(KINDS).filter(x=>SC[x]);if(!ks.length)return;k=ks[Math.random()*ks.length|0]}
+  SCARES[k]();
+}
+$('#scare').onclick=()=>$('#scare').classList.remove('on');
+$('#hey').onclick=()=>{$('#hey').classList.remove('on');clearTimeout(SCARES._h);say('hey')};
+
+/* 一鍵收起：物品飛回包包再站起來 */
+function packAll(){
+  const live=out(),M='隨意地把包包恢復原狀。';spill.classList.add('hid');
+  if(!open||!live.length){live.forEach(p=>p.classList.add('packed'));closeBag(M);return}
+  live.forEach((p,i)=>{const po=p.firstElementChild;
+    po.style.setProperty('--tx',((parseFloat(po.style.getPropertyValue('--sx'))||0)-(+p.dataset.dx||0))+'px');
+    po.style.setProperty('--ty',((parseFloat(po.style.getPropertyValue('--sy'))||0)-(+p.dataset.dy||0))+'px');
+    po.style.setProperty('--d2',(i*.06)+'s')});
+  loot.classList.add('suck');
+  setTimeout(()=>{live.forEach(p=>p.classList.add('packed'));loot.classList.remove('suck');closeBag(M)},300+live.length*60+250);
+}
+const ACT={pack:()=>packAll(),peek:()=>say('peek'),again:()=>say('bag')};
+$('#tx').addEventListener('click',e=>{
+  const o=e.target.closest('.opt');
+  if(o){e.stopPropagation();const a=((D[cur]||{}).opts||[])[+o.dataset.o];if(a)ACT[a]();return}
+  if(e.target.closest('a'))e.stopPropagation();
+});
+window.bag.scare=scare;
+
+/* 管理設定面板（驚嚇＋確定鈕） */
+const sp=document.createElement('div');sp.className='fm';sp.style.cssText='width:100%;border-top:1px dashed #444;padding-top:10px';
+sp.innerHTML='<b style="color:var(--acc)">驚嚇設定</b> <small>（僅本機預覽）</small><label><input type="checkbox" id="sc-on"> 開啟</label><label>每 <input type="number" id="sc-min" min="1" max="50"> ~ <input type="number" id="sc-max" min="1" max="50"> 次打翻觸發一次</label><label>音量 <input type="range" id="sc-vol" min="0" max="100"> <span id="sc-vv"></span></label>'+Object.keys(KINDS).map(k=>'<label><input type="checkbox" class="sc-k" data-k="'+k+'"> '+KINDS[k]+' <button type="button" class="btn sc-t" data-k="'+k+'">試</button></label>').join('');
+ctl.appendChild(sp);
+function syncUI(){$('#sc-on').checked=SC.on;$('#sc-min').value=SC.min;$('#sc-max').value=SC.max;$('#sc-vol').value=SC.vol;$('#sc-vv').textContent=SC.vol;document.querySelectorAll('.sc-k').forEach(c=>{c.checked=!!SC[c.dataset.k]})}
+function readScare(){
+  SC.on=$('#sc-on').checked;SC.min=Math.max(1,+$('#sc-min').value||5);SC.max=Math.max(SC.min,+$('#sc-max').value||8);SC.vol=Math.max(0,Math.min(100,+$('#sc-vol').value||0));
+  document.querySelectorAll('.sc-k').forEach(c=>{SC[c.dataset.k]=c.checked});thr=rollThr();syncUI();
+}
+const saveSC=()=>Promise.resolve();
+sp.addEventListener('input',e=>{if(e.target.id==='sc-vol')$('#sc-vv').textContent=e.target.value});
+sp.addEventListener('click',e=>{const b=e.target.closest('.sc-t');if(!b)return;const keep=SC.vol;SC.vol=Math.max(0,Math.min(100,+$('#sc-vol').value||0));SCARES[b.dataset.k]();SC.vol=keep});
+const okb=document.createElement('div');okb.className='fm';okb.style.width='100%';
+okb.innerHTML='<button type="button" class="btn pri" id="ctl-ok">確定</button><span id="ctl-m" class="mut"></span>';ctl.appendChild(okb);
+$('#ctl-ok').onclick=()=>{
+  document.querySelectorAll('#ctl input[type=checkbox][data-k]:not(.sc-k)').forEach(c=>setItem(c.dataset.k,c.checked));
+  ['hp','mind','act'].forEach(k=>setStat(k,$('#in-'+k).value));setTokens($('#in-tk').value);
+  readScare();const m=$('#ctl-m');
+  saveSC().then(()=>{m.textContent='已套用 ✓'},()=>{m.textContent='已套用，但儲存失敗'});
+  setTimeout(()=>{m.textContent=''},2400);
+};
+syncUI();
+</script>
+</body>
+</html>
